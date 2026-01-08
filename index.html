@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Learning Topic Generator</title>
+    <style>
+        /* Base Styles for Readability */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f9;
+            color: #333;
+            transition: font-size 0.3s ease; /* For zoom control */
+        }
+
+        #app-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-top: 0;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff40;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+
+        h3, h4 {
+            color: #28a745;
+        }
+
+        /* Learner Panel */
+        .panel-box {
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: left;
+            max-width: 400px;
+            margin: 15px auto;
+        }
+
+        .panel-box label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .panel-box input[type="text"],
+        .panel-box input[type="date"],
+        .panel-box select {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #start-lesson-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        /* Main Lesson Content */
+        #lesson-content {
+            padding: 30px;
+        }
+
+        .info-banner {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Controls and AI Panel */
+        .controls-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            flex: 1;
+            min-width: 250px;
+            margin: 5px;
+        }
+
+        .control-btn, .ai-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .control-btn:hover, .ai-btn:hover, .submit-btn:hover {
+            opacity: 0.8;
+        }
+
+        #ai-tutor-panel {
+            background-color: #f1f8e9;
+            border: 2px solid #8bc34a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .tutoy-response {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #8bc34a;
+            background-color: #ffffff;
+            border-radius: 4px;
+            min-height: 20px;
+        }
+
+        /* Core Lesson Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+        }
+
+        /* Assessment Section */
+        #progress-container {
+            padding: 15px;
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .level-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+
+        .level-container.locked {
+            background-color: #ffeaea;
+            border-color: #dc3545;
+        }
+
+        /* CSS rule for content visibility */
+        .level-content {
+            /* Level content is hidden by default */
+            display: none; 
+        }
+        .level-container:not(.locked) .level-content {
+            /* Show content if the level is NOT locked (i.e., Level 1 or levels that have been unlocked) */
+            display: block;
+        }
+
+
+        .lock-message {
+            color: #dc3545;
+            font-style: italic;
+            padding: 10px;
+            border: 1px dashed #dc3545;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Quiz Item Styles */
+        .quiz-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .quiz-item label {
+            display: block;
+            margin-left: 15px;
+        }
+
+        textarea {
+            width: 98%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        .tutoy-quote {
+            color: #007bff;
+            font-style: italic;
+            padding-left: 15px;
+            border-left: 3px solid #007bff;
+        }
+
+        /* Output Options */
+        #output-options .option-group {
+            background-color: #e9f5ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 5px solid #007bff;
+        }
+
+        .note {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Print-Friendly Mode */
+        .print-friendly body {
+            background-color: white !important;
+            color: black !important;
+        }
+        .print-friendly #app-container {
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .print-friendly header, 
+        .print-friendly .controls-panel, 
+        .print-friendly #ai-tutor-panel, 
+        .print-friendly .control-btn, 
+        .print-friendly .ai-btn, 
+        .print-friendly .submit-btn,
+        .print-friendly #output-options {
+            display: none !important; /* Hide unnecessary UI and graphics */
+        }
+        .print-friendly h2, 
+        .print-friendly h3, 
+        .print-friendly h4 {
+            color: black !important; /* Black-and-white compatible */
+            border-color: #ccc !important;
+        }
+        .print-friendly .info-banner {
+            background-color: white !important;
+            color: black !important;
+            border: 1px solid black !important;
+        }
+        .print-friendly table, 
+        .print-friendly th, 
+        .print-friendly td {
+            border-color: black !important;
+        }
+        .print-friendly th {
+            background-color: #eee !important;
+            color: black !important;
+        }
+        .print-friendly .level-container.locked,
+        .print-friendly .level-container {
+            border-color: black !important;
+            background-color: white !important;
+        }
+        .print-friendly .lock-message {
+            display: none !important;
+        }
+        .print-friendly .level-content {
+            display: block !important; /* Show all content for printing */
+        }
+
+        /* Print Stylesheet */
+        @media print {
+            body {
+                font-size: 12pt;
+            }
+            .print-friendly header, 
+            .print-friendly .controls-panel, 
+            .print-friendly #ai-tutor-panel, 
+            .print-friendly .control-btn, 
+            .print-friendly .ai-btn, 
+            .print-friendly .submit-btn,
+            .print-friendly #output-options {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header id="login-panel">
+            <h1>📘 INTERACTIVE LEARNING TOPIC GENERATOR</h1>
+            <div class="panel-box">
+                <h2>👤 LEARNER LOGIN PANEL</h2>
+                <label for="learner-name">Pangalan:</label>
+                <input type="text" id="learner-name" value="Juan Dela Cruz">
+                <label for="learner-grade">Antas/Baitang:</label>
+                <input type="text" id="learner-grade" value="Grade 10 (Filipino)" disabled>
+                <label for="topic-select">Pumili ng Aralin/Topiko:</label>
+                <select id="topic-select">
+                    <option value="panlapi">Ang Mga Panlapi (Affixes)</option>
+                    <option value="ekspresyon">Mga Ekspresiyon sa Pagpapahayag ng Layon o Damdamin</option>
+                    <option value="pagsusuri">Pagsusuri sa mga Akdang Pampanitikan (Africa/Persia)</option>
+                </select>
+                <label for="learner-date">Petsa:</label>
+                <input type="date" id="learner-date"> 
+                <button id="start-lesson-btn">Simulan ang Aralin</button>
+            </div>
+        </header>
+
+        <main id="lesson-content" style="display:none;">
+
+            <div class="info-banner">
+                <span id="display-name"></span> | <span id="display-grade"></span> | <span id="display-date"></span> | <span id="display-topic"></span>
+            </div>
+
+            <article id="core-content-area">
+                <h1 id="lesson-title"></h1>
+
+                <section class="controls-panel">
+                    <div class="control-group">
+                        <h2>🌐 TRANSLATION OPTION</h2>
+                        <button class="control-btn" onclick="simulateAction('Translate to English')">[Translate to English]</button>
+                        <button class="control-btn" onclick="simulateAction('Translate to Filipino')">[Translate to Filipino (Tagalog)]</button>
+                        <button class="control-btn" onclick="simulateAction('Translate to Mother Tongue')">[Translate to Mother Tongue]</button>
+                    </div>
+                    <div class="control-group">
+                        <h2>🔍 ZOOM CONTROLS</h2>
+                        <button class="control-btn" id="zoom-in-btn">[Zoom In (+)]</button>
+                        <button class="control-btn" id="zoom-out-btn">[Zoom Out (-)]</button>
+                        <button class="control-btn" id="zoom-reset-btn">[Reset Zoom]</button>
+                    </div>
+                </section>
+
+                <aside id="ai-tutor-panel">
+                    <h2>🤖 SIMULATED AI LEARNING ASSISTANT: *Si Tutoy*</h2>
+                    <p><strong>Hi, ako si Tutoy, ang iyong Virtual Tutor! Huwag kang mag-alala, nandito ako para tulungan ka. Magtanong ka lang!</strong></p>
+                    <div class="ai-buttons">
+                        <button class="ai-btn" onclick="tutoyExplain('difficult')">[I-explain ang Mahirap na Salita]</button>
+                        <button class="ai-btn" onclick="tutoyExplain('rephrase')">[Rephrasing (Gawing Mas Simple)]</button>
+                        <button class="ai-btn" onclick="tutoyExplain('hint')">[Bigyan Ako ng Hint]</button>
+                        <button class="ai-btn" onclick="tutoyExplain('whyhow')">[Answer "Bakit" at "Paano" Tungkol sa Aralin]</button>
+                        <button class="ai-btn" onclick="tutoyExplain('encourage')">[Sige, Palakasin Mo ang Loob Ko!]</button>
+                    </div>
+                    <div id="tutoy-response" class="tutoy-response"></div>
+                </aside>
+
+                <div id="dynamic-lesson-content">
+                    </div>
+                
+                <section class="core-lesson" id="youtube-resources">
+                    <h2>🎥 YOUTUBE LEARNING RESOURCES</h2>
+                    <ul>
+                        <li><a href="#" onclick="simulateAction('Video Link 1')">Video 1 (Topic-specific link)</a> - Mabilis at malinaw na pagtalakay...</li>
+                        <li><a href="#" onclick="simulateAction('Video Link 2')">Video 2 (Topic-specific link)</a> - Nagbibigay-tuon sa pagkilala sa Susing Termino...</li>
+                        <li><a href="#" onclick="simulateAction('Video Link 3')">Video 3 (Topic-specific link)</a> - Para sa mga nais ng mas malalim na pag-aaral...</li>
+                    </ul>
+                </section>
+            </article>
+
+            <hr>
+
+            <section id="assessment-section">
+                <h2>📝 ACTIVITY & ASSESSMENT SECTION (Seksyon ng Pagsasanay)</h2>
+                <div id="progress-container">
+                    **Progress Bar:** <span id="progress-bar"> [⬜⬜⬜⬜]</span> <span id="progress-percent">(0% Complete)</span>
+                </div>
+                <p class="tutoy-quote"><strong>Tutoy:</strong> "Huwag matakot magkamali! Ang bawat sagot, tama man o mali, ay isang hakbang patungo sa pagkatuto. Kaya mo 'yan!"</p>
+
+                <div class="level-container" id="level-1">
+                    <h3>🔹 LEVEL 1 – KNOWLEDGE (Pagkilala) <span class="level-status" id="status-1"></span></h3>
+                    <p>*(Madali - Easy)*</p>
+                    <div class="level-content">
+                        <div id="level-1-quiz-content">
+                            </div>
+                        <button class="submit-btn" onclick="submitLevel1()">[SUBMIT LEVEL 1]</button>
+                        <div class="feedback" id="feedback-1"></div>
+                    </div>
+                </div>
+
+                <div class="level-container locked" id="level-2">
+                    <h3>🔹 LEVEL 2 – COMPREHENSION (Pag-unawa) <span class="level-status" id="status-2"></span></h3>
+                    <p>*(Katamtaman - Moderate)*</p>
+                    <p class="lock-message">**Naka-lock.** Kumpletuhin muna ang Level 1.</p>
+                    <div class="level-content">
+                        <h4>Pagsasanay 1: Maikling Sagot</h4>
+                        <p>1. (Question related to the selected topic will go here) Hal. Ano ang pagkakaiba ng Kabilaan at Laguhan na uri ng panlapi?</p>
+                        <textarea rows="3" placeholder="Sagot:"></textarea>
+
+                        <h4>Pagsasanay 2: Punan ang Patlang</h4>
+                        <p>1. (Question related to the selected topic will go here) Hal. Sa pamamagitan ng panlapi, nagbabago ang ___________ ng salitang-ugat.</p>
+                        <textarea rows="1" placeholder="Sagot: (Isang salita)"></textarea>
+
+                        <button class="submit-btn" onclick="submitLevel(2)">[SUBMIT LEVEL 2]</button>
+                        <div class="feedback" id="feedback-2"></div>
+                    </div>
+                </div>
+
+                <div class="level-container locked" id="level-3">
+                    <h3>🔹 LEVEL 3 – APPLICATION (Aplikasyon) <span class="level-status" id="status-3"></span></h3>
+                    <p>*(Mapanghamon - Challenging)*</p>
+                    <p class="lock-message">**Naka-lock.** Kumpletuhin muna ang Level 2.</p>
+                    <div class="level-content">
+                        <h4>Pagsasanay 1: Situational Question</h4>
+                        <p>Gumawa ng isang simpleng pangungusap na gagamit ng konsepto/termino mula sa aralin. (Hal. Magbigay ng 2 salitang may Kabilaan at Laguhan at gamitin sa pangungusap.)</p>
+                        <textarea rows="4" placeholder="Ibigay ang iyong halimbawa at paliwanag."></textarea>
+
+                        <button class="submit-btn" onclick="submitLevel(3)">[SUBMIT LEVEL 3]</button>
+                        <div class="feedback" id="feedback-3"></div>
+                    </div>
+                </div>
+
+                <div class="level-container locked" id="level-4">
+                    <h3>🔹 LEVEL 4 – REFLECTION / PERFORMANCE (Pagninilay/Paggawa) <span class="level-status" id="status-4"></span></h3>
+                    <p>*(Pang-Advanced - Advanced)*</p>
+                    <p class="lock-message">**Naka-lock.** Kumpletuhin muna ang Level 3.</p>
+                    <div class="level-content">
+                        <h4>Pagsasanay 1: Maikling Sanaysay</h4>
+                        <p>Bakit mahalaga ang aralin na ito sa iyong pag-unawa sa wikang Filipino at sa lipunan? (3-5 pangungusap).</p>
+                        <textarea rows="5" placeholder="Isulat ang iyong repleksyon dito."></textarea>
+                        
+                        <h4>Pagsasanay 2: Creative Task</h4>
+                        <p>Gumawa ng isang **slogan** (3-6 na salita) tungkol sa kahalagahan ng aralin.</p>
+                        <textarea rows="2" placeholder="Slogan: ..."></textarea>
+
+                        <button class="submit-btn" onclick="submitLevel(4)">[SUBMIT LEVEL 4]</button>
+                        <div class="feedback" id="feedback-4"></div>
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <section id="output-options">
+                <h2>**OUTPUT OPTIONS**</h2>
+                <div class="option-group">
+                    <h4>📧 SEND VIA EMAIL OPTION</h4>
+                    <button class="control-btn" onclick="simulateAction('Emailing Lesson and Activity')">[I-email ang Lesson at Activity]</button>
+                    <p class="note">*Simulated output: Ang email ay maglalaman ng kompletong lesson at iyong mga sagot.*</p>
+                </div>
+                <div class="option-group">
+                    <h4>🖨️ PRINT OPTION</h4>
+                    <button class="control-btn" id="print-btn" onclick="togglePrintMode()">[Toggle Print-Friendly Mode]</button>
+                    <p class="note">*Iwasan ang unnecessary graphics at maging black-and-white compatible.*</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const lessonData = {
+            panlapi: {
+                title: "Pagtuklas sa Kapangyahan ng Salita: Ang Iba't Ibang Uri ng Panlapi",
+                content: `
+                    <section class="core-lesson">
+                        <h2>🔹 CORE CONTENT: Ang Mga Panlapi</h2>
+                        <p>Kumusta, Grade 10! Handa ka na bang tuklasin kung paano nagbabago ang kahulugan ng mga salita sa Filipino? Ang pag-aaral ng Panlapi ay parang pagiging isang *word scientist*—binibigyan mo ng bagong kapangyarihan ang isang simpleng salita!</p>
+                        
+
+                        <h3>I. Depinisyon ng mga Susing Termino (Key Terms)</h3>
+                        <table>
+                            <thead>
+                                <tr><th>Termino</th><th>Depinisyon</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>**Panlapi** (Affix)</td><td>Ito ay isang pantig o grupo ng mga titik na **idinurugtong** sa isang salitang-ugat upang makabuo ng bagong salita at kahulugan.</td></tr>
+                                <tr><td>**Salitang-Ugat** (Root Word)</td><td>Ito ang **pinakabasikong anyo** ng isang salita. Wala itong kasamang panlapi at may sarili itong kahulugan. *Halimbawa: **basa, luto, ganda***.</td></tr>
+                                <tr><td>**Panlapian** (Affixation)</td><td>Ang proseso ng pagdaragdag ng panlapi sa isang salitang-ugat.</td></tr>
+                            </tbody>
+                        </table>
+
+                        <h3>II. Paliwanag na may Halimbawa (Explanation with Examples)</h3>
+                        <p>Mayroong limang (5) pangunahing uri ng panlapi batay sa posisyon nito sa salitang-ugat.</p>
+
+                        <h4>1. Unlapi (Prefix)</h4>
+                        <p>Ang panlapi ay idinudugtong **sa unahan** ng salitang-ugat. *Hal. **mag**basa*</p>
+
+                        <h4>2. Gitlapi (Infix)</h4>
+                        <p>Ang panlapi ay isinisingit **sa gitna** ng salitang-ugat. *Hal. s**um**ulat*</p>
+
+                        <h4>3. Hulapi (Suffix)</h4>
+                        <p>Ang panlapi ay idinudugtong **sa hulihan** o dulo ng salitang-ugat. *Hal. lutu**an** *</p>
+
+                        <h4>4. Kabilaan (Circumfix)</h4>
+                        <p>Ang panlapi ay idinudugtong **sa unahan at sa hulihan** ng salitang-ugat. *Hal. **ka**ganda**han** *</p>
+
+                        <h4>5. Laguhan (Compound Affix)</h4>
+                        <p>Ang panlapi ay idinudugtong **sa unahan, gitna, at hulihan** ng salitang-ugat. *Hal. **p**in**ag**sa**bihan***</p>
+                    </section>
+                `,
+                quiz: `
+                    <h4>Pagsasanay 1: Maramihang Pagpipilian (Knowledge Check)</h4>
+                    <div class="quiz-item">
+                        <p>1. Ano ang tawag sa pinakabasikong anyo ng isang salita na walang kasamang panlapi?</p>
+                        <label><input type="radio" name="q1" value="A"> Panlapian</label><br>
+                        <label><input type="radio" name="q1" value="C"> Salitang-Ugat</label><br>
+                        <label><input type="radio" name="q1" value="B"> Bagong Salita</label>
+                    </div>
+
+                    <div class="quiz-item">
+                        <p>2. Sa salitang **'sumulat'**, anong uri ng panlapi ang ginamit?</p>
+                        <label><input type="radio" name="q2" value="A"> Unlapi</label><br>
+                        <label><input type="radio" name="q2" value="B"> Hulapi</label><br>
+                        <label><input type="radio" name="q2" value="C"> Gitlapi</label>
+                    </div>
+                `,
+                answers: { q1: 'C', q2: 'C' }
+            },
+            ekspresyon: {
+                title: "Wastong Paggamit ng Ekspresiyon sa Pagpapahayag ng Layon at Damdamin",
+                content: `
+                    <section class="core-lesson">
+                        <h2>🔹 CORE CONTENT: Ekspresiyon ng Layon at Damdamin</h2>
+                        <p>Ang araling ito ay nakatuon sa pagtukoy at paggamit ng mga salita o parirala na nagpapahayag ng intensyon (layon) o emosyon (damdamin) ng nagsasalita o sumusulat. Ito ay mahalaga lalo na sa mga pormal na talumpati o pagtatalo.</p>
+                        
+
+                        <h3>I. Ekspresiyon ng Layon (Purpose)</h3>
+                        <table>
+                            <thead>
+                                <tr><th>Ekspresiyon</th><th>Halimbawa</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>**Upang/Para**</td><td>Nag-aral siya nang mabuti **upang** makapasa.</td></tr>
+                                <tr><td>**Sa Layunin**</td><td>**Sa layuning** maiahon ang pamilya, nagtrabaho siya sa ibang bansa.</td></tr>
+                                <tr><td>**Dahil sa**</td><td>Dumaan sa butas ng karayom **dahil sa** matinding kahirapan.</td></tr>
+                            </tbody>
+                        </table>
+
+                        <h3>II. Ekspresiyon ng Damdamin (Emotion)</h3>
+                        <p>Ginagamit ang mga ito upang bigyang-diin ang emosyon.</p>
+                        <ul>
+                            <li>**Pagkalumbay:** *'Sana'y...*, *'Hay naku'*, *'Tunay na napakalungkot'*</li>
+                            <li>**Pagkatuwa:** *'Lubos akong nagagalak'*, *'Yehey'*, *'Napakasaya ng balita!'*</li>
+                            <li>**Pagkadismaya:** *'Nakakapanghinayang'*, *'Sayang na sayang'*</li>
+                        </ul>
+
+                        <h3>III. Maikling Buod</h3>
+                        <p>Ang paggamit ng tamang ekspresiyon ay nagpapatibay sa mensahe at nagpapalinaw ng intensiyon. Ang mga salitang nagpapahayag ng layon ay tumutukoy sa 'bakit' ng isang aksyon, samantalang ang damdamin ay tumutukoy sa emosyon na nakapaloob dito.</p>
+                    </section>
+                `,
+                quiz: `
+                    <h4>Pagsasanay 1: Maramihang Pagpipilian (Knowledge Check)</h4>
+                    <div class="quiz-item">
+                        <p>1. Anong ekspresiyon ang pinakaangkop gamitin kung ang layunin mo ay magbigay ng intensyon o 'purpose'?</p>
+                        <label><input type="radio" name="q1" value="B"> Kung Sakali</label><br>
+                        <label><input type="radio" name="q1" value="C"> Upang</label><br>
+                        <label><input type="radio" name="q1" value="A"> Sa Kabilang Dako</label>
+                    </div>
+
+                    <div class="quiz-item">
+                        <p>2. Aling salita ang nagpapahayag ng matinding damdamin ng pagkatuwa?</p>
+                        <label><input type="radio" name="q2" value="A"> Nakakapanghinayang</label><br>
+                        <label><input type="radio" name="q2" value="B"> Sana'y</label><br>
+                        <label><input type="radio" name="q2" value="C"> Lubos akong nagagalak</label>
+                    </div>
+                `,
+                answers: { q1: 'C', q2: 'C' }
+            },
+            pagsusuri: {
+                title: "Pagsusuri sa mga Akdang Pampanitikan (Africa at Persia)",
+                content: `
+                    <section class="core-lesson">
+                        <h2>🔹 CORE CONTENT: Mga Elemento ng Pagsusuri</h2>
+                        <p>Ang mga akdang pampanitikan mula sa Africa at Persia (tulad ng *Sundiata: Ang Epiko ng Sinaunang Mali*) ay naglalaman ng mayamang kultura, kasaysayan, at aral. Ang kritikal na pagsusuri ay susi sa pag-unawa sa kahalagahan nito sa sarili at sa lipunan.</p>
+                        
+                        
+                        <h3>I. Mga Susing Elemento (Key Elements)</h3>
+                        <table>
+                            <thead>
+                                <tr><th>Elemento</th><th>Pokus ng Pagsusuri</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>**Paksa/Tema**</td><td>Ang pangunahing ideya o aral na nais iparating ng awtor.</td></tr>
+                                <tr><td>**Tauhan**</td><td>Pag-aaral sa motibo, katangian, at ebolusyon ng mga karakter. (Hal. *protagonist* at *antagonist*).</td></tr>
+                                <tr><td>**Tagpuan**</td><td>Ang lugar at panahon kung saan naganap ang kuwento; kung paano ito nakaapekto sa tauhan.</td></tr>
+                            </tbody>
+                        </table>
+
+                        <h3>II. Pagpapahalaga sa Akda</h3>
+                        <p>Ang mga akdang ito ay nagpapakita ng pangkalahatang pagpapahalaga sa: 1) Pagkakaisa ng komunidad, 2) Katapangan sa harap ng pagsubok, at 3) Paggalang sa kasaysayan at tradisyon.</p>
+                        
+                        <h3>III. Maikling Buod</h3>
+                        <p>Ang pag-unawa sa mga elemento ng akdang pampanitikan ay tumutulong sa atin na maikumpara at maunawaan ang kultura ng Africa at Persia, at lalo pang mapahalagahan ang pambansang panitikan ng Pilipinas.</p>
+                    </section>
+                `,
+                quiz: `
+                    <h4>Pagsasanay 1: Maramihang Pagpipilian (Knowledge Check)</h4>
+                    <div class="quiz-item">
+                        <p>1. Ano ang pangunahing pokus kapag sinusuri ang **Tema** ng isang akdang pampanitikan?</p>
+                        <label><input type="radio" name="q1" value="A"> Posisyon ng mga kabanata</label><br>
+                        <label><input type="radio" name="q1" value="C"> Pangunahing ideya o aral</label><br>
+                        <label><input type="radio" name="q1" value="B"> Bilang ng mga tauhan</label>
+                    </div>
+
+                    <div class="quiz-item">
+                        <p>2. Aling elemento ang tumutukoy sa lugar at panahon ng isang kuwento?</p>
+                        <label><input type="radio" name="q2" value="A"> Tauhan</label><br>
+                        <label><input type="radio" name="q2" value="B"> Plot</label><br>
+                        <label><input type="radio" name="q2" value="C"> Tagpuan</label>
+                    </div>
+                `,
+                answers: { q1: 'C', q2: 'C' }
+            }
+        };
+
+        let currentTopic = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. Login Panel Logic ---
+            const loginPanel = document.getElementById('login-panel');
+            const lessonContent = document.getElementById('lesson-content');
+            const startBtn = document.getElementById('start-lesson-btn');
+            const learnerDateInput = document.getElementById('learner-date');
+
+            // Set default date to today for convenience
+            learnerDateInput.value = new Date().toISOString().slice(0, 10);
+
+            startBtn.addEventListener('click', () => {
+                const name = document.getElementById('learner-name').value.trim() || "Learner";
+                const grade = document.getElementById('learner-grade').value;
+                const date = learnerDateInput.value;
+                const topicSelect = document.getElementById('topic-select');
+                currentTopic = topicSelect.value;
+                const topicText = topicSelect.options[topicSelect.selectedIndex].text;
+
+                if (name && currentTopic) {
+                    loginPanel.style.display = 'none';
+                    lessonContent.style.display = 'block';
+
+                    // Display info on content
+                    document.getElementById('display-name').textContent = `Learner: ${name}`;
+                    document.getElementById('display-grade').textContent = `Grade: ${grade}`;
+                    document.getElementById('display-date').textContent = `Date: ${date}`;
+                    document.getElementById('display-topic').textContent = `Topic: ${topicText}`;
+
+                    // Load Dynamic Content
+                    loadLessonContent(currentTopic);
+                    // Reset levels for new topic
+                    resetAllLevels();
+                } else {
+                    alert("Pakilagay ang iyong Pangalan at pumili ng Aralin upang makapag-simula.");
+                }
+            });
+
+            function loadLessonContent(topicKey) {
+                const data = lessonData[topicKey];
+                if (!data) return;
+
+                document.getElementById('lesson-title').innerHTML = `<h1>${data.title}</h1>`;
+                document.getElementById('dynamic-lesson-content').innerHTML = data.content;
+                document.getElementById('level-1-quiz-content').innerHTML = data.quiz;
+            }
+
+            function resetAllLevels() {
+                 completedLevels = 0;
+                 updateProgress(0);
+                 
+                 for(let i = 1; i <= 4; i++) {
+                     const level = document.getElementById(`level-${i}`);
+                     const status = document.getElementById(`status-${i}`);
+                     const feedback = document.getElementById(`feedback-${i}`);
+                     const submitBtn = document.querySelector(`#level-${i} .submit-btn`);
+                     const lockMessage = document.querySelector(`#level-${i} .lock-message`);
+
+                     if (i > 1) {
+                         level.classList.add('locked');
+                         if (lockMessage) lockMessage.style.display = 'block';
+                     } else {
+                         level.classList.remove('locked');
+                     }
+
+                     if (status) status.textContent = '';
+                     if (feedback) feedback.className = 'feedback';
+                     if (feedback) feedback.innerHTML = '';
+                     if (submitBtn) submitBtn.disabled = false;
+                 }
+            }
+
+
+            // --- 2. Zoom Controls Logic (Unchanged) ---
+            const coreContent = document.getElementById('core-content-area');
+            const zoomInBtn = document.getElementById('zoom-in-btn');
+            const zoomOutBtn = document.getElementById('zoom-out-btn');
+            const zoomResetBtn = document.getElementById('zoom-reset-btn');
+            let currentFontSize = 16; // Base font size in pixels
+
+            function updateFontSize() {
+                coreContent.style.fontSize = `${currentFontSize}px`;
+            }
+
+            zoomInBtn.addEventListener('click', () => {
+                if (currentFontSize < 24) { currentFontSize += 2; updateFontSize(); }
+            });
+            zoomOutBtn.addEventListener('click', () => {
+                if (currentFontSize > 12) { currentFontSize -= 2; updateFontSize(); }
+            });
+            zoomResetBtn.addEventListener('click', () => {
+                currentFontSize = 16; updateFontSize();
+            });
+            updateFontSize();
+
+
+            // --- 3. AI Tutor (Tutoy) Logic (Unchanged logic, dynamic response) ---
+            const tutoyResponseDiv = document.getElementById('tutoy-response');
+            const tutoyResponses = {
+                'difficult': "Maaari mo bang i-highlight o ituro ang salita o konsepto na mahirap intindihin? Ipaliwanag ko 'yan sa iyo.",
+                'rephrase': "Gawing mas simple: Ang araling ito ay tumutukoy sa mga pangunahing konsepto at mga terminong ginagamit sa...", // More generic
+                'hint': "Isang pahiwatig para sa Level 1: Balikan ang seksyon ng 'Depinisyon' sa aralin.",
+                'whyhow': "Ang pag-aaral ng topiko na ito ay mahalaga sapagkat ito ang pundasyon ng pag-unawa sa wastong gamit ng wikang Filipino.",
+                'encourage': "Kahanga-hanga ang sipag mo! Tandaan, ang pag-aaral ng wika ay isang paglalakbay. Isang hakbang pa!"
+            };
+
+            window.tutoyExplain = function(type) {
+                tutoyResponseDiv.textContent = `Tutoy: ${tutoyResponses[type]}`;
+            };
+
+            // --- 4. Activity & Assessment Logic ---
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercent = document.getElementById('progress-percent');
+            const totalLevels = 4;
+            let completedLevels = 0;
+
+            window.updateProgress = function(level) {
+                completedLevels = level;
+                let progressStr = '';
+                for (let i = 1; i <= totalLevels; i++) {
+                    progressStr += (i <= completedLevels) ? ' [✅]' : ' [⬜]';
+                }
+                progressBar.textContent = progressStr;
+                progressPercent.textContent = `(${Math.round((completedLevels / totalLevels) * 100)}% Complete)`;
+            }
+
+            function unlockNextLevel(levelNumber) {
+                if (levelNumber < totalLevels) {
+                    const nextLevel = document.getElementById(`level-${levelNumber + 1}`);
+                    if (nextLevel) {
+                        nextLevel.classList.remove('locked');
+                        const lockMessage = nextLevel.querySelector('.lock-message');
+                        if (lockMessage) lockMessage.style.display = 'none';
+
+                        document.getElementById(`status-${levelNumber}`).textContent = '✅ COMPLETE';
+                        
+                        const feedbackDiv = document.getElementById(`feedback-${levelNumber}`);
+                        feedbackDiv.className = 'feedback correct';
+                        feedbackDiv.innerHTML = `<strong>Feedback:</strong> Napakahusay! Na-unlock ang Level ${levelNumber + 1}!`;
+                    }
+                } else {
+                    document.getElementById('status-4').textContent = '🌟 COMPLETE';
+                    const feedbackDiv = document.getElementById('feedback-4');
+                    feedbackDiv.className = 'feedback correct';
+                    feedbackDiv.innerHTML = `<strong>Feedback:</strong> Tapos na ang iyong aralin! Lubos na kahanga-hanga! 100% Mastery!`;
+                }
+                updateProgress(levelNumber);
+            }
+
+            window.submitLevel1 = function() {
+                if (!currentTopic || !lessonData[currentTopic]) {
+                    alert("Error: Walang Lesson na na-load. Paki-pili ang aralin sa login panel.");
+                    return;
+                }
+
+                const correctAnswers = lessonData[currentTopic].answers;
+                const q1 = document.querySelector('#level-1 input[name="q1"]:checked');
+                const q2 = document.querySelector('#level-1 input[name="q2"]:checked');
+                let score = 0;
+
+                if (q1 && q1.value === correctAnswers.q1) score++;
+                if (q2 && q2.value === correctAnswers.q2) score++;
+
+                const feedbackDiv = document.getElementById('feedback-1');
+                if (score === 2) {
+                    feedbackDiv.className = 'feedback correct';
+                    feedbackDiv.innerHTML = `**Score:** ${score}/2 (100% Mastery) <br> **Feedback:** Napakahusay! Nakilala mo ang mga pangunahing konsepto!`;
+                    unlockNextLevel(1);
+                    document.querySelector('#level-1 .submit-btn').disabled = true;
+                } else {
+                    feedbackDiv.className = 'feedback incorrect';
+                    feedbackDiv.innerHTML = `**Score:** ${score}/2 <br> **Feedback:** Kailangan pa ng kaunting pagsasanay. Balikan ang lesson content. Maaari mong subukang sagutin muli o magtanong kay Tutoy.`;
+                }
+            };
+
+            window.submitLevel = function(level) {
+                const levelNum = parseInt(level);
+                const currentLevel = document.getElementById(`level-${levelNum}`);
+
+                if (currentLevel.classList.contains('locked')) {
+                     alert(`Kailangan mo munang i-unlock ang Level ${levelNum} sa pamamagitan ng pagkumpleto ng nakaraang level.`);
+                     return;
+                }
+
+                // Simulate completion and unlock the next one (assuming written answers are correct)
+                unlockNextLevel(levelNum);
+                document.querySelector(`#level-${levelNum} .submit-btn`).disabled = true;
+            };
+            
+            // --- 5. Print Mode Simulation (Unchanged) ---
+            window.togglePrintMode = function() {
+                const body = document.body;
+                const printBtn = document.getElementById('print-btn');
+                
+                if (body.classList.contains('print-friendly')) {
+                    body.classList.remove('print-friendly');
+                    printBtn.textContent = '[Toggle Print-Friendly Mode]';
+                } else {
+                    body.classList.add('print-friendly');
+                    printBtn.textContent = '[Exit Print-Friendly Mode]';
+                    alert("Print-Friendly Mode Activated. Pindutin ang Print button ng iyong browser (Ctrl+P/Cmd+P) para mag-print. I-click ang button ulit para bumalik sa normal view.");
+                }
+            };
+            
+            // --- 6. General Action Simulation (Email, Translation, Video) (Unchanged) ---
+            window.simulateAction = function(action) {
+                alert(`Simulated Action: ${action} triggered! (No actual server operation was performed.)`);
+            };
+
+        });
+    </script>
+</body>
+</html>
